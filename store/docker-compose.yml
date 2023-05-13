@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: mydatabase
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
