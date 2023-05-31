@@ -1,28 +1,44 @@
-version: '3.8'
-
+version: "3"
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "4000:4000"
-    depends_on:
-      - mongodb
-
-  mongodb:
+  mongo:
     image: mongo
     restart: always
     environment:
-      MONGO_INITDB_DATABASE: mydatabase
-    volumes:
-      - ./data:/data/db
+      MONGO_INITDB_ROOT_USERNAME: pfaDatabase
+      MONGO_INITDB_ROOT_PASSWORD: root
+  nginx:
+    depends_on:
+      - api
+      - frontend
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
     ports:
-      - "27017:27017"
+      - "3050:80"
+
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      context: "./backend"
+    volumes:
+      - /app/node_modules
+      - ./backend:/app
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=pfaDatabase
+      - MONGO_USER=admin
+      - MONGO_PASSWORD=root
+    depends_on:
+      - mongo
+  frontend:
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./frontend
+    volumes:
+      - /app/node_modules
+      - ./frontend:/app
